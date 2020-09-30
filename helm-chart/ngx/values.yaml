@@ -5,5 +5,5 @@
 replicaCount: 1
 service:
   nginx:
-    port: 9876
+    port: 12423
 
