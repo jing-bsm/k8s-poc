@@ -62,8 +62,6 @@ spec:
     targetPort: 8080
   selector:
     app.foresee/name: {{ $key }}
-  type: ExternalName
-  externalName: {{ $key }}.poc.svc.cluster.local
 ---
 apiVersion: v1
 kind: Secret
@@ -82,4 +80,30 @@ data:
   java-opts: {{ index . "java-opts" }}
 ---
 {{- end }}
+{{- end }}
+
+
+{{- define "app.ingress" }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  rules:
+  - host: poc.xiao.us.to
+    http:
+      paths:
+      {{- range $key, $value := .Values.app }}
+      - path: /{{ $key }}
+        pathType: Prefix
+        backend:
+          service:
+            name: dev-{{ $key }}
+            port:
+              number: 8080
+      {{- end }}
+---
 {{- end }}

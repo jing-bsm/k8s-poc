@@ -1,5 +1,5 @@
 ---
-replicaCount: 2
+replicaCount: 1
 
 app:
   settings-service:
@@ -8,7 +8,13 @@ app:
     secret:
       role: "NTEwYTJjZTctNDU1OC1lNDk2LTBiOTMtNWY5YzFlOGY4OTZm"
       secret: "NjhiOGMxYmItZTZhMC1hZWE2LWIyZTYtODcwNzgwMTY4YzY5"
-    
+  event-tracking-service:
+    version: "snapshot-201008-004414-0264"
+    java-opts: "-Dspring.profiles.active=aws,dev -Dapp.env=dev"
+    secret:
+      role: "IA=="
+      secret: "IA=="
+
 global:
   env:
     NAME: "dev"
