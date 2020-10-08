@@ -1,0 +1,85 @@
+{{- define "app.deployment" }}
+{{ $appEnv := .Values.global.env }}
+{{ $replicas := .Values.replicaCount }}
+{{- range $key, $value := .Values.app }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.foresee/name: {{ $key }}
+  name: {{ $key }}
+spec:
+  replicas: {{ $replicas }}
+  selector:
+    matchLabels:
+      app.foresee/name: {{ $key }}
+  template:
+    metadata:
+      labels:
+        app.foresee/name: {{ $key }}
+    spec:
+      containers:
+      - name: {{ $key }}
+        image: fsr-artifactory.aws.foreseeresults.com:9001/{{ $key }}:{{ .version }}
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: VAULT_URI
+          value: {{ $appEnv.VAULT_URI }}
+        - name: VAULT_ROLE_ID
+          valueFrom:
+            secretKeyRef:
+              name: {{ $appEnv.NAME }}-secret-{{ $key }}
+              key: role
+        - name: VAULT_SECRET_ID
+          valueFrom:
+            secretKeyRef:
+              name: {{ $appEnv.NAME }}-secret-{{ $key }}
+              key: secret
+        - name: K8S_INGRESS_LB
+          value: {{ $appEnv.K8S_INGRESS_LB }}
+        - name: DEFAULT_JAVA_OPTS
+          value: {{ $appEnv.DEFAULT_JAVA_OPT }}
+        - name: JAVA_OPTS
+          valueFrom:
+            configMapKeyRef:
+              name: {{ $appEnv.NAME }}-config-{{ $key }}
+              key: java-opts
+
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $appEnv.NAME }}-{{ $key }}
+spec:
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app.foresee/name: {{ $key }}
+  type: ExternalName
+  externalName: {{ $key }}.poc.svc.cluster.local
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ $appEnv.NAME }}-secret-{{ $key }}
+type: Opaque
+data:
+  role: {{ .secret.role }}
+  secret: {{ .secret.secret }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $appEnv.NAME }}-config-{{ $key }}
+data:
+  java-opts: {{ index . "java-opts" }}
+---
+{{- end }}
+{{- end }}

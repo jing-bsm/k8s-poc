@@ -1,0 +1,18 @@
+---
+replicaCount: 2
+
+app:
+  settings-service:
+    version: "snapshot-201007-155754-0921"
+    java-opts: "-Dspring.profiles.active=dev,aws -Deureka.environment=dev -DAPPLICATION_NAME=settings-service"
+    secret:
+      role: "NTEwYTJjZTctNDU1OC1lNDk2LTBiOTMtNWY5YzFlOGY4OTZm"
+      secret: "NjhiOGMxYmItZTZhMC1hZWE2LWIyZTYtODcwNzgwMTY4YzY5"
+    
+global:
+  env:
+    NAME: "dev"
+    VAULT_URI: "http://dev-vault.aws.foreseeresults.com:8200"
+    K8S_INGRESS_LB: ""
+    DEFAULT_JAVA_OPT: ""
+
