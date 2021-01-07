@@ -1,0 +1,49 @@
+pipeline {
+    agent any
+    parameters {
+	booleanParam(name: 'dev', defaultValue: true, description: 'deploy to dev k8s cluster')
+	booleanParam(name: 'qal', defaultValue: true, description: 'deploy to qal k8s cluster')
+	choice(name: 'APP', choices: ['settings-service', 'survey-ingestion-ai', 'fcp-publisher'], description: 'Pick something')
+
+    }
+    stages {
+        stage('Choose Version') {
+            steps {
+                sh "echo ${env.APP} here"
+		timeout(time: 3, unit: "MINUTES") {
+		    echo 'Step 1'
+		    script {
+			app_versions = sh(returnStdout: true, script: "curl -vs http://fsr-artifactory.aws.foreseeresults.com/artifactory/docker-local/${env.APP}/ 2>/dev/null | fgrep href | fgrep snapshot | cut -d'\"' -f 2 | sed 's|/||g' | sort -r")
+			echo "Time for user input of versions:\n $app_versions"
+		    	env.APP_VER = input message: "Choose the app ${env.APP} verion!", ok: 'SET', parameters: [choice(name: 'Choices ', choices: app_versions, description: '')]
+		    }
+		    echo "$env.APP_VER"
+                }
+            }
+        }
+	stage('Trigger Deployment') {
+          steps {
+            script {
+                //build job: "../my-relative-job/${BRANCH_TO_TAG}", wait: false
+		echo 'what we have'
+		echo "$env.APP"
+		echo "$env.APP_VER"
+		echo "ENV: ${params.dev} ${params.dev} ${params.APP}"
+		deploy_env = ''
+		if ( params.dev  ) {
+			deploy_env += 'dev'
+		}
+		if ( params.qal) {
+			if ( deploy_env.length() > 1 ){
+				deploy_env += ','
+			}
+			deploy_env += 'qal'
+		}
+
+		echo deploy_env
+		build job: 'version-updater', parameters: [string(name: 'APP_NAME', value: "$env.APP"), string(name:'APP_VERSION', value: "$env.APP_VER"),  string(name:'ENV', value: deploy_env)]
+            }
+          }
+        }
+    }
+}
