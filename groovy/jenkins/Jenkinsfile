@@ -3,7 +3,7 @@ pipeline {
     parameters {
 	booleanParam(name: 'dev', defaultValue: true, description: 'deploy to dev k8s cluster')
 	booleanParam(name: 'qal', defaultValue: true, description: 'deploy to qal k8s cluster')
-	choice(name: 'APP', choices: ['settings-service', 'survey-ingestion-ai', 'fcp-publisher'], description: 'Pick something')
+	choice(name: 'APP', choices: ['settings-service', 'survey-ingestion-ai', 'fcp-publisher','benchmark-service','master-data-management-server','hierarchy-definition-service','event-tracking-service'], description: 'Pick something')
 
     }
     stages {
